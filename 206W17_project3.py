@@ -50,12 +50,24 @@ except:
 
 # Define your function get_user_tweets here:
 
-
+def get_user_tweets(user):
+	twit_user = "twitter_{}".format(user) 
+	if twit_user in CACHE_DICTION:
+		print(user)
+		pass
+	else:
+		print(user)
+		results = api.user_timeline(user) 
+		CACHE_DICTION[twit_user] = results 
+		f = open(CACHE_FNAME,'w') 
+		f.write(json.dumps(CACHE_DICTION)) 
+		f.close() 
+	return CACHE_DICTION[twit_user]
 
 
 # Write an invocation to the function for the "umich" user timeline and save the result in a variable called umich_tweets:
 
-
+umich_tweets = get_user_tweets("umich")
 
 
 ## Task 2 - Creating database and loading data into database
