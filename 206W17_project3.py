@@ -135,23 +135,20 @@ for tweet in umich_tweets:
 sq_connect.commit()
 
 
-
-
-
-
-
-
-
-
-
 ## Task 3 - Making queries, saving data, fetching data
 
 # All of the following sub-tasks require writing SQL statements and executing them using Python.
 
 # Make a query to select all of the records in the Users database. Save the list of tuples in a variable called users_info.
 
+sq_cursor.execute('SELECT * FROM Users')
+users_info = sq_cursor.fetchall()
+
 # Make a query to select all of the user screen names from the database. Save a resulting list of strings (NOT tuples, the strings inside them!) in the variable screen_names. HINT: a list comprehension will make this easier to complete!
 
+sq_cursor.execute('SELECT screen_name FROM Users')
+twit_screen_names = sq_cursor.fetchall()
+screen_names = [str(name) for name in twit_screen_name]
 
 # Make a query to select all of the tweets (full rows of tweet information) that have been retweeted more than 25 times. Save the result (a list of tuples, or an empty list) in a variable called more_than_25_rts.
 
