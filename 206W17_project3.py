@@ -13,6 +13,7 @@ import tweepy
 import twitter_info # same deal as always...
 import json
 import sqlite3
+import re
 
 ## Your name: samii stoloff
 ## The names of anyone you worked with on this project:
@@ -148,20 +149,23 @@ users_info = sq_cursor.fetchall()
 
 sq_cursor.execute('SELECT screen_name FROM Users')
 twit_screen_names = sq_cursor.fetchall()
-screen_names = [str(name) for name in twit_screen_name]
+screen_names = [str(name) for name in twit_screen_names]
 
 # Make a query to select all of the tweets (full rows of tweet information) that have been retweeted more than 25 times. Save the result (a list of tuples, or an empty list) in a variable called more_than_25_rts.
 
-
+sq_cursor.execute('SELECT * FROM Tweets WHERE retweets > 5')
+more_than_25_rts = sq_cursor.fetchall()
 
 # Make a query to select all the descriptions (descriptions only) of the users who have favorited more than 25 tweets. Access all those strings, and save them in a variable called descriptions_fav_users, which should ultimately be a list of strings.
 
-
+sq_cursor.execute('SELECT description FROM Users WHERE num_favs > 25')
+descriptions_fav_users = [str(description[0]) for description in sq_cursor.fetchall()]
 
 # Make a query using an INNER JOIN to get a list of tuples with 2 elements in each tuple: the user screenname and the text of the tweet -- for each tweet that has been retweeted more than 50 times. Save the resulting list of tuples in a variable called joined_result.
 
-
-
+query = 'SELECT Users.screen_name, tweet_text FROM Users INNER JOIN Tweets ON Users.user_id = Tweets.user_id WHERE Tweets.retweets > 5'
+sq_cursor.execute(query)
+joined_result = sq_cursor.fetchall()
 
 ## Task 4 - Manipulating data with comprehensions & libraries
 
@@ -177,7 +181,41 @@ screen_names = [str(name) for name in twit_screen_name]
 # Write code to create a dictionary whose keys are Twitter screen names and whose associated values are lists of tweet texts that that user posted. You may need to make additional queries to your database! To do this, you can use, and must use at least one of: the DefaultDict container in the collections library, a dictionary comprehension, list comprehension(s). Y
 # You should save the final dictionary in a variable called twitter_info_diction.
 
+words = []
 
+for person in descriptions_fav_users:
+	person = re.findall(r"[A-z0-9]+", person)
+	for p in person:
+		words.append(p)
+
+description_words = {w for w in words}
+
+total_char = ""
+
+for word in words:
+	total_char += word
+
+descrip_chars = collections.Counter(total_char)
+
+most_common_char = descrip_chars.most_common(1)[0][0]
+
+sq_cursor.execute("SELECT Users.screen_name, tweet_text FROM Users INNER JOIN Tweets ON Users.user_id=Tweets.user_id")
+
+twitter_tuples = sq_cursor.fetchall()
+
+print(twitter_tuples)
+
+twitter_info_diction= {}
+
+for t in twitter_tuples:
+	if t[0] not in twitter_info_diction:
+		twitter_info_diction[t[0]] = [t[1]]
+	else:
+		twitter_info_diction[t[0]].append(t[1])
+
+print(twitter_info_diction)
+
+sq_connect.close()
 
 ### IMPORTANT: MAKE SURE TO CLOSE YOUR DATABASE CONNECTION AT THE END OF THE FILE HERE SO YOU DO NOT LOCK YOUR DATABASE (it's fixable, but it's a pain). ###
 
