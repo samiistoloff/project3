@@ -69,7 +69,6 @@ def get_user_tweets(user):
 
 umich_tweets = get_user_tweets("umich")
 
-
 ## Task 2 - Creating database and loading data into database
 
 # You will be creating a database file: project3_tweets.db
@@ -83,11 +82,20 @@ umich_tweets = get_user_tweets("umich")
 # - time_posted (the time at which the tweet was created)
 # - retweets (containing the integer representing the number of times the tweet has been retweeted)
 
+sq_connect = sqlite3.connect("project3_tweets.db")
+sq_cursor = sq_connect.cursor()
+sq_cursor.execute("DROP TABLE IF EXISTS Tweets")
+sq_cursor.execute("CREATE TABLE Tweets (tweet_id TEXT PRIMARY KEY, tweet_text TEXT, user_id TEXT NOT NULL, time_posted TIMESTAMP, retweets INT)")
+
 # table Users, with columns:
 # - user_id (containing the string id belonging to the user, from twitter data -- note the id_str attribute) -- this column should be the PRIMARY KEY of this table
 # - screen_name (containing the screen name of the user on Twitter)
 # - num_favs (containing the number of tweets that user has favorited)
 # - description (text containing the description of that user on Twitter, e.g. "Lecturer IV at UMSI focusing on programming" or "I tweet about a lot of things" or "Software engineer, librarian, lover of dogs..." -- whatever it is. OK if an empty string)
+
+sq_cursor.execute("DROP TABLE IF EXISTS Users")
+
+sq_cursor.execute("CREATE TABLE Users (user_id TEXT PRIMARY KEY, screen_name TEXT, num_favs INT, description TEXT)")
 
 ## You should load into the Users table:
 # The umich user, and all of the data about users that are mentioned in the umich timeline. 
@@ -100,6 +108,31 @@ umich_tweets = get_user_tweets("umich")
 ## HINT: There's a Tweepy method to get user info that we've looked at before, so when you have a user id or screenname you can find alllll the info you want about the user.
 ## HINT #2: You may want to go back to a structure we used in class this week to ensure that you reference the user correctly in each Tweet record.
 ## HINT #3: The users mentioned in each tweet are included in the tweet dictionary -- you don't need to do any manipulation of the Tweet text to find out which they are! Do some nested data investigation on a dictionary that represents 1 tweet to see it!
+
+
+load_tweet = "INSERT INTO Tweets VALUES (?, ?, ?, ?, ?)"
+
+load_user = "INSERT OR IGNORE INTO Users VALUES (?, ?, ?, ?)"
+
+for tweet in umich_tweets:
+
+	full = (tweet["id"], tweet["text"], tweet["user"]["id"], tweet["created_at"], tweet["retweet_count"])
+
+	sq_cursor.execute(load_tweet, full)
+
+	user = (tweet["user"]["id"], tweet["user"]["screen_name"], tweet["user"]["favourites_count"], tweet["user"]["description"])
+
+	sq_cursor.execute(load_user, user)
+
+	for mention in tweet["entities"]["user_mentions"]:
+
+		mentions = api.get_user(mention["screen_name"])
+
+		last_m = (mentions["id"], mentions["screen_name"], mentions["favourites_count"], mentions["description"])
+
+		sq_cursor.execute(load_user,last_m)
+
+sq_connect.commit()
 
 
 
